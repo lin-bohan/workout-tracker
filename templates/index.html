@@ -42,7 +42,6 @@
       color: var(--accent);
     }
 
-    /* Date navigation */
     .date-nav {
       display: flex;
       align-items: center;
@@ -68,10 +67,7 @@
 
     .date-nav button:hover { border-color: var(--accent); }
 
-    .date-display {
-      flex: 1;
-      text-align: center;
-    }
+    .date-display { flex: 1; text-align: center; }
 
     .date-display .day-name {
       font-size: 12px;
@@ -80,14 +76,9 @@
       color: var(--muted);
     }
 
-    .date-display .date-label {
-      font-size: 18px;
-      font-weight: 600;
-    }
-
+    .date-display .date-label { font-size: 18px; font-weight: 600; }
     .date-display .date-label.today { color: var(--accent); }
 
-    /* Week strip */
     .week-strip {
       display: flex;
       gap: 6px;
@@ -121,11 +112,7 @@
 
     .week-day.active .wd-name { color: var(--accent); }
 
-    .week-day .wd-num {
-      font-size: 15px;
-      font-weight: 600;
-      margin-top: 2px;
-    }
+    .week-day .wd-num { font-size: 15px; font-weight: 600; margin-top: 2px; }
 
     .week-day .wd-dot {
       width: 4px;
@@ -138,7 +125,6 @@
 
     .week-day.has-data .wd-dot { opacity: 1; }
 
-    /* Add exercise form */
     .add-form {
       display: flex;
       gap: 8px;
@@ -161,8 +147,8 @@
     .add-form input::placeholder { color: var(--muted); }
 
     .input-exercise { flex: 2; }
-    .input-weight { flex: 1; min-width: 80px; }
-    .input-reps { flex: 1; min-width: 80px; }
+    .input-weight   { flex: 1; min-width: 80px; }
+    .input-reps     { flex: 1; min-width: 80px; }
 
     .add-form button {
       background: var(--accent);
@@ -180,7 +166,6 @@
 
     .add-form button:hover { opacity: 0.85; }
 
-    /* Exercise list */
     .exercise-list {
       display: flex;
       flex-direction: column;
@@ -216,19 +201,13 @@
       min-width: 0;
     }
 
-    .exercise-item input:hover {
-      border-color: var(--border);
-    }
+    .exercise-item input:hover  { border-color: var(--border); }
+    .exercise-item input:focus  { border-color: var(--accent); background: rgba(255,255,255,0.04); }
 
-    .exercise-item input:focus {
-      border-color: var(--accent);
-      background: rgba(255,255,255,0.04);
-    }
-
-    .exercise-item .in-name { flex: 2; font-weight: 500; }
+    .exercise-item .in-name   { flex: 2; font-weight: 500; }
     .exercise-item .in-weight { flex: 1; color: var(--muted); }
     .exercise-item .in-weight:focus { color: var(--text); }
-    .exercise-item .in-reps { flex: 1; color: var(--accent); font-weight: 600; }
+    .exercise-item .in-reps   { flex: 1; color: var(--accent); font-weight: 600; }
 
     .ex-delete {
       background: none;
@@ -251,7 +230,6 @@
       font-size: 14px;
     }
 
-    /* Summary */
     .summary {
       margin-top: 24px;
       padding-top: 20px;
@@ -269,20 +247,20 @@
   <h1>Workout Tracker</h1>
 
   <div class="date-nav">
-    <button id="prevWeek" title="Previous week">&#8249;</button>
+    <button id="prevWeek">&#8249;</button>
     <div class="date-display">
       <div class="day-name" id="dayName"></div>
       <div class="date-label" id="dateLabel"></div>
     </div>
-    <button id="nextWeek" title="Next week">&#8250;</button>
+    <button id="nextWeek">&#8250;</button>
   </div>
 
   <div class="week-strip" id="weekStrip"></div>
 
   <form class="add-form" id="addForm">
     <input class="input-exercise" type="text" id="inputExercise" placeholder="Exercise (e.g. Bench Press)" autocomplete="off" required />
-    <input class="input-weight" type="text" id="inputWeight" placeholder="Weight (e.g. 135 lbs)" autocomplete="off" />
-    <input class="input-reps" type="text" id="inputReps" placeholder="Sets × Reps" autocomplete="off" required />
+    <input class="input-weight"   type="text" id="inputWeight"   placeholder="Weight (e.g. 135 lbs)"      autocomplete="off" />
+    <input class="input-reps"     type="text" id="inputReps"     placeholder="Sets × Reps"                autocomplete="off" required />
     <button type="submit">Add</button>
   </form>
 
@@ -295,24 +273,23 @@
 </div>
 
 <script>
-  const DATA_KEY = 'wt_data_v1';
+  const DAY_NAMES      = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const DAY_NAMES_LONG = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
-  function loadData() {
-    try { return JSON.parse(localStorage.getItem(DATA_KEY)) || {}; }
-    catch { return {}; }
-  }
-
-  function saveData(data) {
-    localStorage.setItem(DATA_KEY, JSON.stringify(data));
-  }
+  let selectedDate = new Date();
+  let weekStart    = startOfWeek(selectedDate);
 
   function dateKey(d) {
-    return d.toISOString().slice(0, 10);
+    // Local YYYY-MM-DD without UTC conversion
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
   }
 
   function startOfWeek(d) {
-    const diff = (d.getDay() + 6) % 7; // Mon-based
-    const mon = new Date(d);
+    const diff = (d.getDay() + 6) % 7;
+    const mon  = new Date(d);
     mon.setDate(d.getDate() - diff);
     return mon;
   }
@@ -327,30 +304,30 @@
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
 
-  function parseReps(repsStr) {
-    const match = repsStr.trim().match(/^(\d+)\s*[x×]\s*(\d+)$/i);
-    if (match) return parseInt(match[1]) * parseInt(match[2]);
-    const num = parseInt(repsStr);
-    return isNaN(num) ? 0 : num;
+  function parseReps(s) {
+    const m = s.trim().match(/^(\d+)\s*[x×]\s*(\d+)$/i);
+    if (m) return parseInt(m[1]) * parseInt(m[2]);
+    const n = parseInt(s);
+    return isNaN(n) ? 0 : n;
   }
 
-  const DAY_NAMES      = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-  const DAY_NAMES_LONG = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+  async function render() {
+    const selKey      = dateKey(selectedDate);
+    const weekEndKey  = dateKey(addDays(weekStart, 6));
+    const weekStartKey = dateKey(weekStart);
+    const today       = dateKey(new Date());
 
-  let selectedDate = new Date();
-  let weekStart    = startOfWeek(selectedDate); // week shown in the strip
+    const [exercises, dotDates] = await Promise.all([
+      fetch(`/api/day/${selKey}`).then(r => r.json()),
+      fetch(`/api/week-dots?start=${weekStartKey}&end=${weekEndKey}`).then(r => r.json()),
+    ]);
 
-  function render() {
-    const data   = loadData();
-    const today  = dateKey(new Date());
-    const selKey = dateKey(selectedDate);
-
-    // Date header
+    // Header
     const dow = (selectedDate.getDay() + 6) % 7;
     document.getElementById('dayName').textContent = DAY_NAMES_LONG[dow];
     const dl = document.getElementById('dateLabel');
     dl.textContent = formatDateLabel(selectedDate);
-    dl.className = 'date-label' + (selKey === today ? ' today' : '');
+    dl.className   = 'date-label' + (selKey === today ? ' today' : '');
 
     // Week strip
     const strip = document.getElementById('weekStrip');
@@ -360,111 +337,99 @@
       const key = dateKey(d);
       const div = document.createElement('div');
       div.className = 'week-day'
-        + (key === selKey ? ' active' : '')
-        + (data[key] && data[key].length ? ' has-data' : '');
+        + (key === selKey         ? ' active'   : '')
+        + (dotDates.includes(key) ? ' has-data' : '');
       div.innerHTML = `
         <div class="wd-name">${DAY_NAMES[i]}</div>
         <div class="wd-num">${d.getDate()}</div>
         <div class="wd-dot"></div>
       `;
-      div.addEventListener('click', () => {
-        selectedDate = new Date(d);
-        render();
-      });
+      div.addEventListener('click', () => { selectedDate = new Date(d); render(); });
       strip.appendChild(div);
     }
 
     // Exercise list
-    const list    = document.getElementById('exerciseList');
+    const list = document.getElementById('exerciseList');
     list.innerHTML = '';
-    const entries = data[selKey] || [];
 
-    if (entries.length === 0) {
+    if (exercises.length === 0) {
       const empty = document.createElement('div');
-      empty.className = 'empty-state';
+      empty.className   = 'empty-state';
       empty.textContent = 'No exercises logged yet.';
       list.appendChild(empty);
       document.getElementById('summary').style.display = 'none';
-    } else {
-      entries.forEach((entry, idx) => {
-        const item = document.createElement('div');
-        item.className = 'exercise-item';
+      return;
+    }
 
-        const inName   = makeInput('in-name',   entry.name,          'Exercise');
-        const inWeight = makeInput('in-weight', entry.weight || '',   'Weight');
-        const inReps   = makeInput('in-reps',   entry.reps,          'Sets × Reps');
+    exercises.forEach(entry => {
+      const item = document.createElement('div');
+      item.className = 'exercise-item';
 
-        function saveField() {
-          const d = loadData();
-          const k = dateKey(selectedDate);
-          if (!d[k] || !d[k][idx]) return;
-          d[k][idx] = { name: inName.value.trim(), weight: inWeight.value.trim(), reps: inReps.value.trim() };
-          saveData(d);
-          updateSummary(d[k]);
-          // Refresh dot on week strip if needed
-          const dot = strip.children[idx] && strip.querySelector('.week-day.active .wd-dot');
-          if (dot) dot.style.opacity = d[k].length ? '1' : '0';
-        }
+      const inName   = makeInput('in-name',   entry.name,   'Exercise');
+      const inWeight = makeInput('in-weight', entry.weight, 'Weight');
+      const inReps   = makeInput('in-reps',   entry.reps,   'Sets × Reps');
 
-        [inName, inWeight, inReps].forEach(inp => inp.addEventListener('blur', saveField));
-
-        const delBtn = document.createElement('button');
-        delBtn.className = 'ex-delete';
-        delBtn.title = 'Remove';
-        delBtn.textContent = '×';
-        delBtn.addEventListener('click', () => {
-          const d = loadData();
-          const k = dateKey(selectedDate);
-          d[k].splice(idx, 1);
-          if (d[k].length === 0) delete d[k];
-          saveData(d);
-          render();
+      async function saveEntry() {
+        await fetch(`/api/exercises/${entry.id}`, {
+          method:  'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({ name: inName.value.trim(), weight: inWeight.value.trim(), reps: inReps.value.trim() }),
         });
+        refreshSummary();
+      }
 
-        item.appendChild(inName);
-        item.appendChild(inWeight);
-        item.appendChild(inReps);
-        item.appendChild(delBtn);
-        list.appendChild(item);
+      [inName, inWeight, inReps].forEach(inp => inp.addEventListener('blur', saveEntry));
+
+      const del = document.createElement('button');
+      del.className   = 'ex-delete';
+      del.textContent = '×';
+      del.addEventListener('click', async () => {
+        await fetch(`/api/exercises/${entry.id}`, { method: 'DELETE' });
+        render();
       });
 
-      updateSummary(entries);
-    }
+      item.append(inName, inWeight, inReps, del);
+      list.appendChild(item);
+    });
+
+    showSummary(exercises);
+  }
+
+  function refreshSummary() {
+    const inputs = document.querySelectorAll('.exercise-item .in-reps');
+    const reps   = [...inputs].map(i => parseReps(i.value));
+    document.getElementById('statReps').textContent = reps.reduce((a,b)=>a+b,0) || '—';
+  }
+
+  function showSummary(entries) {
+    const total = entries.reduce((s, e) => s + parseReps(e.reps), 0);
+    document.getElementById('statExercises').textContent = entries.length;
+    document.getElementById('statReps').textContent      = total || '—';
+    document.getElementById('summary').style.display     = 'flex';
   }
 
   function makeInput(cls, value, placeholder) {
     const inp = document.createElement('input');
-    inp.type = 'text';
-    inp.className = cls;
-    inp.value = value;
+    inp.type        = 'text';
+    inp.className   = cls;
+    inp.value       = value;
     inp.placeholder = placeholder;
     inp.autocomplete = 'off';
     return inp;
   }
 
-  function updateSummary(entries) {
-    const totalReps = entries.reduce((sum, e) => sum + parseReps(e.reps || ''), 0);
-    document.getElementById('statExercises').textContent = entries.length;
-    document.getElementById('statReps').textContent = totalReps || '—';
-    document.getElementById('summary').style.display = 'flex';
-  }
-
-  function escHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-  }
-
-  document.getElementById('addForm').addEventListener('submit', e => {
+  document.getElementById('addForm').addEventListener('submit', async e => {
     e.preventDefault();
     const name   = document.getElementById('inputExercise').value.trim();
     const weight = document.getElementById('inputWeight').value.trim();
     const reps   = document.getElementById('inputReps').value.trim();
     if (!name || !reps) return;
 
-    const data = loadData();
-    const key  = dateKey(selectedDate);
-    if (!data[key]) data[key] = [];
-    data[key].push({ name, weight, reps });
-    saveData(data);
+    await fetch('/api/exercises', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ date: dateKey(selectedDate), name, weight, reps }),
+    });
 
     document.getElementById('inputExercise').value = '';
     document.getElementById('inputWeight').value   = '';
@@ -473,16 +438,8 @@
     render();
   });
 
-  // Arrows shift only the displayed week, not selectedDate
-  document.getElementById('prevWeek').addEventListener('click', () => {
-    weekStart = addDays(weekStart, -7);
-    render();
-  });
-
-  document.getElementById('nextWeek').addEventListener('click', () => {
-    weekStart = addDays(weekStart, 7);
-    render();
-  });
+  document.getElementById('prevWeek').addEventListener('click', () => { weekStart = addDays(weekStart, -7); render(); });
+  document.getElementById('nextWeek').addEventListener('click', () => { weekStart = addDays(weekStart,  7); render(); });
 
   render();
 </script>
