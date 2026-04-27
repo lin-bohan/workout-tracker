@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Workout Tracker</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --border: #2a2a2a;
+      --text: #e8e8e8;
+      --muted: #666;
+      --accent: #c8f542;
+      --danger: #ff4d4d;
+      --radius: 8px;
+      --font: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 15px;
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 40px 20px 80px;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+      margin-bottom: 32px;
+      color: var(--accent);
+    }
+
+    /* Date navigation */
+    .date-nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .date-nav button {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: border-color 0.15s;
+    }
+
+    .date-nav button:hover { border-color: var(--accent); }
+
+    .date-display {
+      flex: 1;
+      text-align: center;
+    }
+
+    .date-display .day-name {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--muted);
+    }
+
+    .date-display .date-label {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .date-display .date-label.today { color: var(--accent); }
+
+    /* Week strip */
+    .week-strip {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 32px;
+    }
+
+    .week-day {
+      flex: 1;
+      text-align: center;
+      padding: 8px 4px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      background: var(--surface);
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .week-day:hover { border-color: var(--accent); }
+
+    .week-day.active {
+      border-color: var(--accent);
+      background: rgba(200, 245, 66, 0.08);
+    }
+
+    .week-day .wd-name {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--muted);
+    }
+
+    .week-day.active .wd-name { color: var(--accent); }
+
+    .week-day .wd-num {
+      font-size: 15px;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .week-day .wd-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--accent);
+      margin: 4px auto 0;
+      opacity: 0;
+    }
+
+    .week-day.has-data .wd-dot { opacity: 1; }
+
+    /* Add exercise form */
+    .add-form {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    .add-form input {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .add-form input:focus { border-color: var(--accent); }
+    .add-form input::placeholder { color: var(--muted); }
+
+    .input-exercise { flex: 2; }
+    .input-weight { flex: 1; min-width: 80px; }
+    .input-reps { flex: 1; min-width: 80px; }
+
+    .add-form button {
+      background: var(--accent);
+      color: #0f0f0f;
+      border: none;
+      border-radius: var(--radius);
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: opacity 0.15s;
+    }
+
+    .add-form button:hover { opacity: 0.85; }
+
+    /* Exercise list */
+    .exercise-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .exercise-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 10px;
+      animation: slideIn 0.15s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .exercise-item input {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text);
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s, background 0.15s;
+      min-width: 0;
+    }
+
+    .exercise-item input:hover {
+      border-color: var(--border);
+    }
+
+    .exercise-item input:focus {
+      border-color: var(--accent);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .exercise-item .in-name { flex: 2; font-weight: 500; }
+    .exercise-item .in-weight { flex: 1; color: var(--muted); }
+    .exercise-item .in-weight:focus { color: var(--text); }
+    .exercise-item .in-reps { flex: 1; color: var(--accent); font-weight: 600; }
+
+    .ex-delete {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 0 2px;
+      line-height: 1;
+      flex-shrink: 0;
+      transition: color 0.15s;
+    }
+
+    .ex-delete:hover { color: var(--danger); }
+
+    .empty-state {
+      text-align: center;
+      color: var(--muted);
+      padding: 40px 0;
+      font-size: 14px;
+    }
+
+    /* Summary */
+    .summary {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 24px;
+    }
+
+    .summary-stat { font-size: 13px; color: var(--muted); }
+    .summary-stat span { color: var(--text); font-weight: 600; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Workout Tracker</h1>
+
+  <div class="date-nav">
+    <button id="prevWeek" title="Previous week">&#8249;</button>
+    <div class="date-display">
+      <div class="day-name" id="dayName"></div>
+      <div class="date-label" id="dateLabel"></div>
+    </div>
+    <button id="nextWeek" title="Next week">&#8250;</button>
+  </div>
+
+  <div class="week-strip" id="weekStrip"></div>
+
+  <form class="add-form" id="addForm">
+    <input class="input-exercise" type="text" id="inputExercise" placeholder="Exercise (e.g. Bench Press)" autocomplete="off" required />
+    <input class="input-weight" type="text" id="inputWeight" placeholder="Weight (e.g. 135 lbs)" autocomplete="off" />
+    <input class="input-reps" type="text" id="inputReps" placeholder="Sets × Reps" autocomplete="off" required />
+    <button type="submit">Add</button>
+  </form>
+
+  <div class="exercise-list" id="exerciseList"></div>
+
+  <div class="summary" id="summary" style="display:none">
+    <div class="summary-stat">Exercises: <span id="statExercises">0</span></div>
+    <div class="summary-stat">Total reps: <span id="statReps">0</span></div>
+  </div>
+</div>
+
+<script>
+  const DATA_KEY = 'wt_data_v1';
+
+  function loadData() {
+    try { return JSON.parse(localStorage.getItem(DATA_KEY)) || {}; }
+    catch { return {}; }
+  }
+
+  function saveData(data) {
+    localStorage.setItem(DATA_KEY, JSON.stringify(data));
+  }
+
+  function dateKey(d) {
+    return d.toISOString().slice(0, 10);
+  }
+
+  function startOfWeek(d) {
+    const diff = (d.getDay() + 6) % 7; // Mon-based
+    const mon = new Date(d);
+    mon.setDate(d.getDate() - diff);
+    return mon;
+  }
+
+  function addDays(d, n) {
+    const r = new Date(d);
+    r.setDate(r.getDate() + n);
+    return r;
+  }
+
+  function formatDateLabel(d) {
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function parseReps(repsStr) {
+    const match = repsStr.trim().match(/^(\d+)\s*[x×]\s*(\d+)$/i);
+    if (match) return parseInt(match[1]) * parseInt(match[2]);
+    const num = parseInt(repsStr);
+    return isNaN(num) ? 0 : num;
+  }
+
+  const DAY_NAMES      = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const DAY_NAMES_LONG = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+  let selectedDate = new Date();
+  let weekStart    = startOfWeek(selectedDate); // week shown in the strip
+
+  function render() {
+    const data   = loadData();
+    const today  = dateKey(new Date());
+    const selKey = dateKey(selectedDate);
+
+    // Date header
+    const dow = (selectedDate.getDay() + 6) % 7;
+    document.getElementById('dayName').textContent = DAY_NAMES_LONG[dow];
+    const dl = document.getElementById('dateLabel');
+    dl.textContent = formatDateLabel(selectedDate);
+    dl.className = 'date-label' + (selKey === today ? ' today' : '');
+
+    // Week strip
+    const strip = document.getElementById('weekStrip');
+    strip.innerHTML = '';
+    for (let i = 0; i < 7; i++) {
+      const d   = addDays(weekStart, i);
+      const key = dateKey(d);
+      const div = document.createElement('div');
+      div.className = 'week-day'
+        + (key === selKey ? ' active' : '')
+        + (data[key] && data[key].length ? ' has-data' : '');
+      div.innerHTML = `
+        <div class="wd-name">${DAY_NAMES[i]}</div>
+        <div class="wd-num">${d.getDate()}</div>
+        <div class="wd-dot"></div>
+      `;
+      div.addEventListener('click', () => {
+        selectedDate = new Date(d);
+        render();
+      });
+      strip.appendChild(div);
+    }
+
+    // Exercise list
+    const list    = document.getElementById('exerciseList');
+    list.innerHTML = '';
+    const entries = data[selKey] || [];
+
+    if (entries.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'empty-state';
+      empty.textContent = 'No exercises logged yet.';
+      list.appendChild(empty);
+      document.getElementById('summary').style.display = 'none';
+    } else {
+      entries.forEach((entry, idx) => {
+        const item = document.createElement('div');
+        item.className = 'exercise-item';
+
+        const inName   = makeInput('in-name',   entry.name,          'Exercise');
+        const inWeight = makeInput('in-weight', entry.weight || '',   'Weight');
+        const inReps   = makeInput('in-reps',   entry.reps,          'Sets × Reps');
+
+        function saveField() {
+          const d = loadData();
+          const k = dateKey(selectedDate);
+          if (!d[k] || !d[k][idx]) return;
+          d[k][idx] = { name: inName.value.trim(), weight: inWeight.value.trim(), reps: inReps.value.trim() };
+          saveData(d);
+          updateSummary(d[k]);
+          // Refresh dot on week strip if needed
+          const dot = strip.children[idx] && strip.querySelector('.week-day.active .wd-dot');
+          if (dot) dot.style.opacity = d[k].length ? '1' : '0';
+        }
+
+        [inName, inWeight, inReps].forEach(inp => inp.addEventListener('blur', saveField));
+
+        const delBtn = document.createElement('button');
+        delBtn.className = 'ex-delete';
+        delBtn.title = 'Remove';
+        delBtn.textContent = '×';
+        delBtn.addEventListener('click', () => {
+          const d = loadData();
+          const k = dateKey(selectedDate);
+          d[k].splice(idx, 1);
+          if (d[k].length === 0) delete d[k];
+          saveData(d);
+          render();
+        });
+
+        item.appendChild(inName);
+        item.appendChild(inWeight);
+        item.appendChild(inReps);
+        item.appendChild(delBtn);
+        list.appendChild(item);
+      });
+
+      updateSummary(entries);
+    }
+  }
+
+  function makeInput(cls, value, placeholder) {
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.className = cls;
+    inp.value = value;
+    inp.placeholder = placeholder;
+    inp.autocomplete = 'off';
+    return inp;
+  }
+
+  function updateSummary(entries) {
+    const totalReps = entries.reduce((sum, e) => sum + parseReps(e.reps || ''), 0);
+    document.getElementById('statExercises').textContent = entries.length;
+    document.getElementById('statReps').textContent = totalReps || '—';
+    document.getElementById('summary').style.display = 'flex';
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  document.getElementById('addForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const name   = document.getElementById('inputExercise').value.trim();
+    const weight = document.getElementById('inputWeight').value.trim();
+    const reps   = document.getElementById('inputReps').value.trim();
+    if (!name || !reps) return;
+
+    const data = loadData();
+    const key  = dateKey(selectedDate);
+    if (!data[key]) data[key] = [];
+    data[key].push({ name, weight, reps });
+    saveData(data);
+
+    document.getElementById('inputExercise').value = '';
+    document.getElementById('inputWeight').value   = '';
+    document.getElementById('inputReps').value     = '';
+    document.getElementById('inputExercise').focus();
+    render();
+  });
+
+  // Arrows shift only the displayed week, not selectedDate
+  document.getElementById('prevWeek').addEventListener('click', () => {
+    weekStart = addDays(weekStart, -7);
+    render();
+  });
+
+  document.getElementById('nextWeek').addEventListener('click', () => {
+    weekStart = addDays(weekStart, 7);
+    render();
+  });
+
+  render();
+</script>
+</body>
+</html>
